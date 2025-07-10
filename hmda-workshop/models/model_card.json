@@ -1,0 +1,44 @@
+{
+  "model_details": {
+    "name": ["HMDA Loan Approval Model"],
+    "version": ["1.0"],
+    "type": ["Random Forest"],
+    "created_date": ["2025-07-09"],
+    "framework": ["randomForest"]
+  },
+  "intended_use": {
+    "primary_use": ["Predict loan approval decisions for HMDA applications"],
+    "users": ["Loan officers, risk analysts, compliance teams"],
+    "out_of_scope": ["Not for automated decision-making without human review"]
+  },
+  "training_data": {
+    "dataset": ["HMDA 2024 Modified LAR"],
+    "samples": [68687],
+    "features": [9],
+    "target_distribution": {
+      "approved": [59854],
+      "denied": [8833]
+    }
+  },
+  "performance": {
+    "test_set_size": [17171],
+    "metrics": {
+      "f1_score": [0.955],
+      "auc": [0.755],
+      "accuracy": [0.918],
+      "precision": [0.919],
+      "recall": [0.994]
+    }
+  },
+  "limitations": [
+    ["Model trained on 2024 data only"],
+    ["Geographic coverage limited to reporting institutions"],
+    ["Does not include all possible factors in lending decisions"],
+    ["Performance metrics within expected range"]
+  ],
+  "ethical_considerations": [
+    ["Model should not be used as sole basis for lending decisions"],
+    ["Regular monitoring for bias across protected classes required"],
+    ["Compliance with Fair Lending laws mandatory"]
+  ]
+}

@@ -1,0 +1,6 @@
+"test_name","status","decision","probability","confidence","loan_to_income","response_time"
+"high_income_low_dti","SUCCESS","Approved",0.51,0.51,1.67,0.393117904663086
+"low_income_high_dti","SUCCESS","Denied",0.19,0.81,8.57,0.303324699401855
+"medium_income_medium_dti","SUCCESS","Approved",0.55,0.55,2.67,0.290547847747803
+"young_good_metrics","SUCCESS","Approved",0.63,0.63,2.31,0.295331001281738
+"senior_applicant","SUCCESS","Approved",0.57,0.57,2.57,0.327770948410034

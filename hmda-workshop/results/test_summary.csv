@@ -1,0 +1,9 @@
+"test_name","status","error","response_time"
+"high_income_low_dti","FAILED","Missing fields: prediction, probability, decision, model_type",1.00281476974487
+"low_income_high_dti","FAILED","Missing fields: prediction, probability, decision, model_type",0.729693651199341
+"medium_income_medium_dti","FAILED","Missing fields: prediction, probability, decision, model_type",0.307187557220459
+"small_loan","FAILED","Missing fields: prediction, probability, decision, model_type",0.508439302444458
+"jumbo_loan","FAILED","Missing fields: prediction, probability, decision, model_type",0.298754453659058
+"young_applicant","FAILED","Missing fields: prediction, probability, decision, model_type",0.299537420272827
+"senior_applicant","FAILED","Missing fields: prediction, probability, decision, model_type",0.329350233078003
+"investment_property","FAILED","Missing fields: prediction, probability, decision, model_type",0.479074478149414
