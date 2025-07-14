@@ -1,5 +1,5 @@
 # ============================================================================
-# HMDA Loan Approval Model - Optimized Dashboard for Domino
+# HMDA Loan Approval Model - Fixed Dashboard (No Flashing)
 # ============================================================================
 
 # Load required libraries with error handling
@@ -54,41 +54,15 @@ colors <- list(
   black = "#000000"
 )
 
-# Simplified CSS for better compatibility with overlay fixes
+# Simplified CSS - REMOVED PROBLEMATIC OVERLAY FIXES
 custom_css <- "
 /* Base styles */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  opacity: 1 !important;
-  filter: none !important;
 }
 
 .content-wrapper, .right-side {
   background-color: #f5f5f5;
-  opacity: 1 !important;
-  filter: none !important;
-}
-
-/* FIX FOR DARK OVERLAY ISSUE */
-.shiny-busy-indicator,
-.shiny-notification-panel,
-.shiny-busy {
-  display: none !important;
-}
-
-.modal-backdrop {
-  display: none !important;
-}
-
-body, .wrapper, .content-wrapper {
-  opacity: 1 !important;
-  filter: none !important;
-}
-
-/* Force hide any loading screens */
-#shiny-disconnected-overlay,
-.shiny-disconnected-overlay {
-  display: none !important;
 }
 
 /* Header */
@@ -286,16 +260,15 @@ body, .wrapper, .content-wrapper {
   z-index: 9999;
 }
 
-/* Ensure no dimming */
-.sidebar-overlay,
-.control-sidebar-bg {
-  display: none !important;
-}
-
 /* Ensure content is above any overlays */
 .content {
   position: relative;
   z-index: 1000;
+}
+
+/* Prevent scroll to top on tab change */
+.tab-content {
+  overflow-x: hidden;
 }
 "
 
@@ -541,26 +514,14 @@ ui <- dashboardPage(
     
     tags$head(
       tags$style(HTML(custom_css)),
-      # Add JavaScript to remove overlay on load and periodically
+      # SIMPLIFIED JavaScript - only run once on load
       tags$script(HTML("
         $(document).ready(function() {
-          // Initial cleanup
-          setTimeout(function() {
-            $('.shiny-busy-indicator').remove();
-            $('.modal-backdrop').remove();
-            $('body').removeClass('modal-open');
-            $('body').css('opacity', '1');
-            $('.content-wrapper').css('opacity', '1');
-          }, 500);
-          
-          // Periodic cleanup
-          setInterval(function() {
-            $('.shiny-busy-indicator').hide();
-            $('.modal-backdrop').remove();
-            if ($('body').css('opacity') != '1') {
-              $('body').css('opacity', '1');
-            }
-          }, 1000);
+          // Prevent scroll to top on tab change
+          $(document).on('shown.bs.tab', 'a[data-toggle=\"tab\"]', function (e) {
+            e.preventDefault();
+            return false;
+          });
         });
       "))
     ),
@@ -992,40 +953,7 @@ ui <- dashboardPage(
 
 server <- function(input, output, session) {
   
-  # Force remove any loading indicators after app starts
-  observe({
-    shinyjs::runjs("
-      $('.shiny-busy-indicator').remove();
-      $('.modal-backdrop').remove();
-      $('body').css('opacity', '1');
-      $('.content-wrapper').css('opacity', '1');
-    ")
-  })
-  
-  # Periodic cleanup of any stuck overlays
-  observe({
-    invalidateLater(2000, session)  # Run every 2 seconds
-    shinyjs::runjs("
-      // Remove any stuck notifications
-      if ($('.shiny-notification').length > 0) {
-        $('.shiny-notification').each(function() {
-          var $this = $(this);
-          if ($this.css('opacity') == 0) {
-            $this.remove();
-          }
-        });
-      }
-      
-      // Ensure no modal backdrops are stuck
-      $('.modal-backdrop').remove();
-      
-      // Ensure body is not dimmed
-      $('body').css('opacity', '1').removeClass('modal-open');
-      
-      // Remove busy indicators
-      $('.shiny-busy-indicator').hide();
-    ")
-  })
+  # REMOVED the aggressive periodic JavaScript cleanup
   
   # Reactive values
   values <- reactiveValues(
@@ -1035,7 +963,7 @@ server <- function(input, output, session) {
     feature_impacts = NULL
   )
   
-  # Pre-calculate summary statistics
+  # Pre-calculate summary statistics - CACHED to prevent re-calculation
   summary_stats <- reactive({
     list(
       total_loans = nrow(test_data),
@@ -1044,7 +972,7 @@ server <- function(input, output, session) {
       median_income = median(test_data$income),
       median_loan = median(test_data$loan_amount)
     )
-  })
+  }) %>% bindCache("summary")  # Cache with a constant key
   
   # ============================================================================
   # EXECUTIVE DASHBOARD
@@ -1500,32 +1428,35 @@ server <- function(input, output, session) {
     )
   }, server = FALSE)
   
-  # Scatter plot
+  # Scatter plot - ISOLATED to prevent unnecessary re-renders
   output$scatter_plot <- renderPlotly({
     req(values$filtered_data, input$scatter_x, input$scatter_y)
     
-    # Sample data for performance
-    plot_data <- values$filtered_data
-    if (nrow(plot_data) > 1000) {
-      plot_data <- plot_data %>% sample_n(1000)
-    }
-    
-    plot_ly(
-      data = plot_data,
-      x = ~get(input$scatter_x),
-      y = ~get(input$scatter_y),
-      color = ~factor(loan_approved),
-      colors = c("0" = colors$danger, "1" = colors$success),
-      type = 'scatter',
-      mode = 'markers',
-      marker = list(size = 6, opacity = 0.7)
-    ) %>%
-      layout(
-        xaxis = list(title = tools::toTitleCase(gsub("_", " ", input$scatter_x))),
-        yaxis = list(title = tools::toTitleCase(gsub("_", " ", input$scatter_y))),
-        legend = list(title = list(text = "Status"))
+    # Use isolate to prevent unnecessary re-renders
+    isolate({
+      # Sample data for performance
+      plot_data <- values$filtered_data
+      if (nrow(plot_data) > 1000) {
+        plot_data <- plot_data %>% sample_n(1000)
+      }
+      
+      plot_ly(
+        data = plot_data,
+        x = ~get(input$scatter_x),
+        y = ~get(input$scatter_y),
+        color = ~factor(loan_approved),
+        colors = c("0" = colors$danger, "1" = colors$success),
+        type = 'scatter',
+        mode = 'markers',
+        marker = list(size = 6, opacity = 0.7)
       ) %>%
-      config(displayModeBar = FALSE)
+        layout(
+          xaxis = list(title = tools::toTitleCase(gsub("_", " ", input$scatter_x))),
+          yaxis = list(title = tools::toTitleCase(gsub("_", " ", input$scatter_y))),
+          legend = list(title = list(text = "Status"))
+        ) %>%
+        config(displayModeBar = FALSE)
+    })
   })
   
   # Distribution plot
